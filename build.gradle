@@ -3,6 +3,10 @@ import org.springframework.cloud.contract.verifier.config.TestFramework
 buildscript {
     repositories {
         mavenCentral()
+        mavenLocal()
+        maven { url "https://repo.spring.io/snapshot" }
+        maven { url "https://repo.spring.io/milestone" }
+        maven { url "https://repo.spring.io/release" }
     }
     dependencies {
         classpath 'org.springframework.cloud:spring-cloud-contract-gradle-plugin:3.1.0'
@@ -13,9 +17,12 @@ plugins {
     id 'org.springframework.boot' version '2.6.2'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'java'
+    id 'groovy'
 }
 
 apply plugin: 'spring-cloud-contract'
+apply plugin: 'maven-publish'
+
 
 group = 'com.example'
 version = '0.0.1-SNAPSHOT'
@@ -65,12 +72,35 @@ contracts {
     }
 }
 
+publish.dependsOn("publishStubsToScm")
+publishToMavenLocal.dependsOn("publishStubsToScm")
+
 contractTest {
     testLogging {
         exceptionFormat = 'full'
     }
 
     useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact bootJar
+
+            artifact verifierStubsJar
+
+            // https://github.com/spring-gradle-plugins/dependency-management-plugin/issues/273
+            versionMapping {
+                usage("java-api") {
+                    fromResolutionOf("runtimeClasspath")
+                }
+                usage("java-runtime") {
+                    fromResolutionResult()
+                }
+            }
+        }
+    }
 }
 
 test {
