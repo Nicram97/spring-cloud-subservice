@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: express-deployment-subservice
+spec:
+  selector:
+    matchLabels:
+      app: spring-cloud-subservice
+  template:
+    metadata:
+      labels:
+        app: spring-cloud-subservice
+    spec:
+      containers:
+        - name: spring-cloud-subservice
+          image: spring-cloud-subservice
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8081
+      restartPolicy: Always
